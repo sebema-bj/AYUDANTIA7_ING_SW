@@ -3,12 +3,14 @@ import { TaskCard } from '../components/TaskCard';
 import { CreateTaskForm } from '../components/CreateTaskForm';
 import tasksService from '../services/tasks.service';
 import { useAuth } from '../context/AuthContext';
+import { EditTaskModal } from '../components/EditTaskModal';
 
 export function TasksPage() {
   const { user, logout } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [taskEditando, setTaskEditando] = useState(null);
 
   // Carga inicial de tareas del usuario autenticado desde el backend
   useEffect(() => {
@@ -60,6 +62,17 @@ export function TasksPage() {
     }
   };
 
+    // Actualizar tarea editada en la lista
+  const handleTaskUpdated = (updatedTask) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === updatedTask.id ? updatedTask : task
+      )
+    );
+
+    setTaskEditando(null);
+  };
+
   // Agregar la nueva tarea al inicio de la lista
   const handleTaskCreated = (newTask) => {
     setTasks((prevTasks) => [newTask, ...prevTasks]);
@@ -90,6 +103,15 @@ export function TasksPage() {
           <CreateTaskForm onTaskCreated={handleTaskCreated} />
         </div>
 
+        {/* Editar formulario */}
+        {taskEditando && (
+          <EditTaskModal
+            task={taskEditando}
+            onTaskUpdated={handleTaskUpdated}
+            onClose={() => setTaskEditando(null)}
+          />
+        )}
+
         {/* Indicador de carga */}
         {loading && (
           <div className="text-center py-10 text-slate-400 animate-pulse">
@@ -116,6 +138,7 @@ export function TasksPage() {
                 completed={task.completed}
                 onToggle={() => handleToggle(task.id)}
                 onDelete={() => handleDelete(task.id)}
+                onEdit={() => setTaskEditando(task)}
               />
             ))}
 
